@@ -1,0 +1,65 @@
+name: YouTube download feasibility
+on:
+  push:
+    branches: [feasibility/youtube-import-20261024]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Install current open-source downloader
+        run: |
+          python3 -m venv "$RUNNER_TEMP/youtube-probe"
+          "$RUNNER_TEMP/youtube-probe/bin/python" -m pip install --disable-pip-version-check 'yt-dlp[default]'
+      - name: Probe both requested videos without login cookies
+        run: |
+          "$RUNNER_TEMP/youtube-probe/bin/python" - <<'PY'
+          import json, os, pathlib, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+          from yt_dlp.version import __version__
+          print('Downloader:', __version__, flush=True)
+          print('Node:', shutil.which('node'), flush=True)
+          results=[]
+          for video_id in ['6esoZ3MZMq4','82p6wSWJ9Xg']:
+              started=time.monotonic()
+              url='https://www.youtube.com/watch?v='+video_id
+              row={'video_id':video_id,'metadata_ok':False,'download_ok':False}
+              try:
+                  endpoint='https://www.youtube.com/oembed?'+urllib.parse.urlencode({'url':url,'format':'json'})
+                  with urllib.request.urlopen(endpoint,timeout=15) as response:
+                      public=json.load(response)
+                  row.update(title=public.get('title'),channel=public.get('author_name'))
+              except Exception as error:
+                  row['public_metadata_error']=str(error)
+              common=[sys.executable,'-m','yt_dlp','--ignore-config','--no-playlist','--no-cache-dir','--no-colors','--socket-timeout','15','--retries','0','--extractor-retries','0','--js-runtimes','node','--match-filter','!is_live','-f','bv[height<=720]/b[height<=720]/b']
+              try:
+                  metadata=subprocess.run(common+['--skip-download','--dump-single-json','--',url],capture_output=True,text=True,timeout=60)
+                  if metadata.returncode:
+                      row['error']=re.sub(r'https?://\S+','[URL]',metadata.stderr.strip())[-1800:]
+                  else:
+                      info=json.loads(metadata.stdout)
+                      row.update(metadata_ok=True,title=info.get('title'),duration_seconds=info.get('duration'),available_formats=len(info.get('formats',[])))
+                      with tempfile.TemporaryDirectory(prefix='youtube-probe-') as directory:
+                          download=subprocess.run(common+['--no-part','--fixup','never','--no-progress','--max-filesize','150M','-o',directory+'/video.%(ext)s','--',url],capture_output=True,text=True,timeout=90)
+                          files=[p for p in pathlib.Path(directory).glob('video.*') if p.is_file()]
+                          row['download_ok']=download.returncode==0 and any(p.stat().st_size>1024 for p in files)
+                          row['download_bytes']=sum(p.stat().st_size for p in files)
+                          if row['download_ok'] and shutil.which('ffprobe'):
+                              inspected=subprocess.run(['ffprobe','-v','error','-show_entries','stream=codec_type,width,height','-of','json',str(files[0])],capture_output=True,text=True,timeout=15)
+                              row['streams']=json.loads(inspected.stdout).get('streams',[]) if inspected.returncode==0 else []
+                          if not row['download_ok']:
+                              row['error']=re.sub(r'https?://\S+','[URL]',(download.stderr or download.stdout).strip())[-1800:]
+              except subprocess.TimeoutExpired:
+                  row['error']='Bounded test timed out; stopped without retrying.'
+              except Exception as error:
+                  row['error']=str(error)
+              row['elapsed_seconds']=round(time.monotonic()-started,1)
+              results.append(row)
+              print('VIDEO_RESULT='+json.dumps(row,ensure_ascii=False),flush=True)
+          print('PROBE_RESULTS='+json.dumps(results,ensure_ascii=False),flush=True)
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as summary:
+              summary.write('# Automatic YouTube import: hosted download feasibility\n\nNo login cookies, paid APIs, raw videos, or extracted scores are stored as artifacts. Temporary downloads are deleted after each test.\n\n')
+              for row in results:
+                  summary.write('## '+row['video_id']+'\n\n```json\n'+json.dumps(row,indent=2,ensure_ascii=False)+'\n```\n\n')
+          PY
