@@ -26,17 +26,17 @@ jobs:
             try {
              await page.goto('https://www.youtube.com/watch?v='+id,{waitUntil:'domcontentloaded',timeout:30000});
              const reject=page.getByRole('button',{name:/Reject all/i});await reject.first().waitFor({timeout:5000}).catch(()=>{});if(await reject.first().isVisible().catch(()=>false))await reject.first().click({timeout:5000});
-             await page.locator('video').first().waitFor({timeout:10000});
+             await page.locator('video').first().waitFor({state:'attached',timeout:10000});
              await page.evaluate(()=>{const video=document.querySelector('video');if(video){video.muted=true;video.play().catch(()=>{});}});
              await page.waitForFunction(()=>{const video=document.querySelector('video');return (video?.readyState>=2&&video.videoWidth>0)||document.querySelector('yt-playability-error-supported-renderers');},{},{timeout:20000}).catch(()=>{});
-             const info=await page.evaluate(()=>{const video=document.querySelector('video');return {bodyText:document.body.innerText.slice(-1200),title:document.title,duration:video?.duration||null,width:video?.videoWidth||0,height:video?.videoHeight||0,currentTime:video?.currentTime||0,readyState:video?.readyState||0,adShowing:!!document.querySelector('.ad-showing'),playerError:document.querySelector('yt-playability-error-supported-renderers')?.innerText||null};});
+             const info=await page.evaluate(()=>{const video=document.querySelector('video');return {bodyText:document.body.innerText.slice(0,1600),title:document.title,duration:video?.duration||null,width:video?.videoWidth||0,height:video?.videoHeight||0,currentTime:video?.currentTime||0,readyState:video?.readyState||0,adShowing:!!document.querySelector('.ad-showing'),playerError:document.querySelector('yt-playability-error-supported-renderers')?.innerText||null};});
              if(info.width>0&&!info.adShowing) {
               await page.evaluate(()=>{const video=document.querySelector('video');video.currentTime=45;video.pause();});
               await page.waitForFunction(()=>{const v=document.querySelector('video');return v?.currentTime>=44&&v.readyState>=2;},{},{timeout:15000});
               info.frameScreenshotBytes=(await page.locator('video').first().screenshot({timeout:10000})).length;
              }
              const row={video_id:id,...info};results.push(row);console.log('BROWSER_RESULT='+JSON.stringify(row));
-            }catch(error){results.push({video_id:id,error:error.message});}finally{await page.close();}
+            }catch(error){results.push({video_id:id,error:error.message,bodyText:await page.locator('body').innerText().then(t=>t.slice(0,1600)).catch(()=>''),playerError:await page.locator('yt-playability-error-supported-renderers').first().innerText().catch(()=>null)});}finally{await page.close();}
            }
           }finally{await browser.close();}
           console.log('BROWSER_RESULTS='+JSON.stringify(results));
