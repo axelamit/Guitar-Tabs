@@ -1,0 +1,1 @@
+{"name":"guitar-tabs","private":true,"scripts":{"dev":"npm --prefix fretbook run dev","build":"npm --prefix fretbook run build","test":"npm --prefix fretbook test"}}

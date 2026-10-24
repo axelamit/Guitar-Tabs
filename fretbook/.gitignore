@@ -1,0 +1,9 @@
+node_modules/
+dist/
+public/font/
+public/soundfont/
+.sites-runtime/
+.sites-checkout/
+test-results/
+playwright-report/
+.DS_Store
