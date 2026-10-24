@@ -26,13 +26,11 @@ await page
 await page
   .getByLabel("Song title", { exact: true })
   .fill("Image and score test");
-await page
-  .locator(".add-modal input[type=file]")
-  .setInputFiles({
-    name: "original.png",
-    mimeType: "image/png",
-    buffer: Buffer.from(picture, "base64"),
-  });
+await page.locator(".add-modal input[type=file]").setInputFiles({
+  name: "original.png",
+  mimeType: "image/png",
+  buffer: Buffer.from(picture, "base64"),
+});
 await page
   .getByRole("button", { name: "Crop original.png", exact: true })
   .click();
@@ -46,13 +44,11 @@ await page.mouse.up();
 await page.getByRole("button", { name: "Save crop", exact: true }).click();
 await expect(page.locator(".attachment-item")).toHaveCount(2);
 const xml = `<?xml version="1.0"?><score-partwise version="4.0"><work><work-title>Imported guitar study</work-title></work><part-list><score-part id="P1"><part-name>Guitar</part-name><score-instrument id="I1"><instrument-name>Acoustic guitar</instrument-name></score-instrument><midi-instrument id="I1"><midi-channel>1</midi-channel><midi-program>25</midi-program></midi-instrument></score-part></part-list><part id="P1"><measure number="1"><attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes><note><pitch><step>E</step><octave>4</octave></pitch><duration>4</duration><type>whole</type><notations><technical><string>1</string><fret>0</fret></technical></notations></note></measure></part></score-partwise>`;
-await page
-  .locator(".add-modal input[type=file]")
-  .setInputFiles({
-    name: "study.musicxml",
-    mimeType: "application/xml",
-    buffer: Buffer.from(xml),
-  });
+await page.locator(".add-modal input[type=file]").setInputFiles({
+  name: "study.musicxml",
+  mimeType: "application/xml",
+  buffer: Buffer.from(xml),
+});
 await page.getByRole("button", { name: "Save tab", exact: true }).click();
 await page.getByRole("button", { name: "Open Image and score test" }).click();
 await expect(page.getByRole("button", { name: "Play score" })).toBeEnabled({
@@ -130,13 +126,11 @@ const recording = await page.evaluate(async () => {
 await page
   .getByRole("button", { name: "Video to pages", exact: false })
   .click();
-await page
-  .locator(".video-modal input[type=file]")
-  .setInputFiles({
-    name: "Test video.webm",
-    mimeType: "video/webm",
-    buffer: Buffer.from(recording, "base64"),
-  });
+await page.locator(".video-modal input[type=file]").setInputFiles({
+  name: "Test video.webm",
+  mimeType: "video/webm",
+  buffer: Buffer.from(recording, "base64"),
+});
 await expect(
   page.getByRole("button", { name: "Capture this section" }),
 ).toBeEnabled({ timeout: 15000 });

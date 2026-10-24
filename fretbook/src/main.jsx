@@ -80,6 +80,7 @@ function Score(props) {
   );
 }
 import { Cropper, VideoExtractor } from "./studio.jsx";
+import { YouTubeExtractor } from "./youtube.jsx";
 import "./style.css";
 const uid = () => crypto.randomUUID();
 const seeds = () =>
@@ -178,7 +179,8 @@ function App() {
     [modal, setModal] = useState(null),
     [toast, setToast] = useState(""),
     [mobile, setMobile] = useState(false),
-    [studio, setStudio] = useState(false);
+    [studio, setStudio] = useState(false),
+    [youtubeStudio, setYoutubeStudio] = useState(false);
   const fileRef = useRef(),
     saveQueue = useRef(Promise.resolve());
   useEffect(() => {
@@ -331,6 +333,17 @@ function App() {
           ))}
         </nav>
         <div className="nav-label tools-label">MAKE IT YOURS</div>
+        <button
+          className="nav-item"
+          onClick={() => {
+            setYoutubeStudio(true);
+            setMobile(false);
+          }}
+        >
+          <Film size={18} />
+          <span>YouTube to pages</span>
+          <span className="small-tag">FREE</span>
+        </button>
         <button className="nav-item" onClick={() => setStudio(true)}>
           <Scissors size={18} />
           <span>Video to pages</span>
@@ -725,12 +738,15 @@ function App() {
               <div>
                 <h3>Your favorite video, a little easier to practise.</h3>
                 <p>
-                  Turn a local video’s on-screen tabs into a clean collection of
-                  images.
+                  Collect the on-screen tabs from a YouTube link or a local
+                  video.
                 </p>
               </div>
-              <button className="button subtle" onClick={() => setStudio(true)}>
-                Open video studio
+              <button
+                className="button subtle"
+                onClick={() => setYoutubeStudio(true)}
+              >
+                Extract from YouTube
                 <ArrowRight size={16} />
               </button>
             </section>
@@ -746,6 +762,19 @@ function App() {
           onDone={(attachments, title) => {
             setStudio(false);
             setModal({ title, attachments });
+          }}
+        />
+      )}
+      {youtubeStudio && (
+        <YouTubeExtractor
+          onClose={() => setYoutubeStudio(false)}
+          onLocalVideo={() => {
+            setYoutubeStudio(false);
+            setStudio(true);
+          }}
+          onDone={(attachments, title, url) => {
+            setYoutubeStudio(false);
+            setModal({ title, url, attachments });
           }}
         />
       )}
@@ -838,7 +867,8 @@ function AddTab({ initial, onClose, onSave }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [crop, setCrop] = useState(null),
-    [dragging, setDragging] = useState(false);
+    [dragging, setDragging] = useState(false),
+    [youtubeImport, setYoutubeImport] = useState(false);
   const fileRef = useRef();
   const change = (key, value) => setForm({ ...form, [key]: value });
   const addFiles = async (files) => {
@@ -1051,8 +1081,8 @@ function AddTab({ initial, onClose, onSave }) {
                 <Link size={27} />
                 <h3>Keep the source close</h3>
                 <p>
-                  Save a YouTube video or any website. Add a file or text to the
-                  same song whenever you’re ready.
+                  Paste a YouTube link below to collect its on-screen tabs, or
+                  save any website as a reference.
                 </p>
               </div>
             )}
@@ -1164,6 +1194,26 @@ function AddTab({ initial, onClose, onSave }) {
                 onChange={(e) => change("url", e.target.value)}
               />
             </label>
+            {youtubeId(form.url) && (
+              <div className="youtube-import-prompt">
+                <Film size={22} />
+                <div>
+                  <strong>Tabs on screen? Bring them into your library.</strong>
+                  <p>
+                    Share the YouTube tab, select the tab area, and collect
+                    images while it plays. Desktop browser required.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => setYoutubeImport(true)}
+                >
+                  <Scissors size={15} />
+                  Extract tabs
+                </button>
+              </div>
+            )}
             <div className="form-grid">
               <label className="field">
                 Arranger
@@ -1212,6 +1262,22 @@ function AddTab({ initial, onClose, onSave }) {
           </footer>
         </form>
       </section>
+      {youtubeImport && (
+        <YouTubeExtractor
+          initialUrl={form.url}
+          initialTitle={form.title}
+          onClose={() => setYoutubeImport(false)}
+          onDone={(pages, title, url) => {
+            setAttachments((all) => [...all, ...pages]);
+            setForm((current) => ({
+              ...current,
+              title: current.title || title,
+              url,
+            }));
+            setYoutubeImport(false);
+          }}
+        />
+      )}
       {crop && (
         <Cropper
           attachment={crop}
@@ -1236,7 +1302,8 @@ function Reader({ song, update, onBack, onEdit, onDelete, notify }) {
     [zoom, setZoom] = useState(100),
     [scrolling, setScrolling] = useState(false),
     [notes, setNotes] = useState(song.notes),
-    [find, setFind] = useState(false);
+    [find, setFind] = useState(false),
+    [youtubeImport, setYoutubeImport] = useState(false);
   const viewport = useRef();
   const a =
     song.attachments.find((x) => x.id === attachmentId) || song.attachments[0];
@@ -1552,6 +1619,14 @@ function Reader({ song, update, onBack, onEdit, onDelete, notify }) {
                 Watch on YouTube
                 <ExternalLink size={13} />
               </a>
+              <button
+                className="video-extract-button"
+                onClick={() => setYoutubeImport(true)}
+              >
+                <Scissors size={15} />
+                Extract tab images
+                <ArrowRight size={14} />
+              </button>
             </section>
           )}
           {safeUrl(song.url) && !video && (
@@ -1621,6 +1696,20 @@ function Reader({ song, update, onBack, onEdit, onDelete, notify }) {
             update({ ...song, attachments: [...song.attachments, attachment] });
             setAttachmentId(attachment.id);
             setCrop(null);
+          }}
+        />
+      )}
+      {youtubeImport && (
+        <YouTubeExtractor
+          initialUrl={song.url}
+          initialTitle={song.title}
+          onClose={() => setYoutubeImport(false)}
+          onDone={(pages) => {
+            update({ ...song, attachments: [...song.attachments, ...pages] });
+            setAttachmentId(pages[0].id);
+            setView("original");
+            setYoutubeImport(false);
+            notify(`${pages.length} tab pages added to your arrangement`);
           }}
         />
       )}

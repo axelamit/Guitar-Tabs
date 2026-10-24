@@ -24,7 +24,7 @@ function useBlobUrl(blob) {
   }, [blob]);
   return url;
 }
-function CropSurface({ children, rect, setRect, className = "" }) {
+export function CropSurface({ children, rect, setRect, className = "" }) {
   const ref = useRef(),
     start = useRef();
   const point = (e) => {
@@ -90,7 +90,7 @@ function CropSurface({ children, rect, setRect, className = "" }) {
     </div>
   );
 }
-async function cropBlob(source, rect, width, height) {
+export async function cropBlob(source, rect, width, height) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(rect.w * width));
   canvas.height = Math.max(1, Math.round(rect.h * height));
@@ -195,7 +195,14 @@ export function Cropper({ attachment, onClose, onSave }) {
     </div>
   );
 }
-function FrameThumb({ attachment, index, remove, move, total }) {
+export function FrameThumb({
+  attachment,
+  index,
+  remove,
+  move,
+  total,
+  disabled = false,
+}) {
   const url = useBlobUrl(attachment.blob);
   return (
     <article className="frame-thumb">
@@ -207,7 +214,7 @@ function FrameThumb({ attachment, index, remove, move, total }) {
         <button
           className="icon-button"
           aria-label={`Move page ${index + 1} up`}
-          disabled={index === 0}
+          disabled={disabled || index === 0}
           onClick={() => move(index, -1)}
         >
           <ChevronUp size={15} />
@@ -215,7 +222,7 @@ function FrameThumb({ attachment, index, remove, move, total }) {
         <button
           className="icon-button"
           aria-label={`Move page ${index + 1} down`}
-          disabled={index === total - 1}
+          disabled={disabled || index === total - 1}
           onClick={() => move(index, 1)}
         >
           <ChevronDown size={15} />
@@ -223,6 +230,7 @@ function FrameThumb({ attachment, index, remove, move, total }) {
         <button
           className="icon-button"
           aria-label={`Remove page ${index + 1}`}
+          disabled={disabled}
           onClick={() => remove(index)}
         >
           <Trash2 size={15} />
