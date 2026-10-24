@@ -8,7 +8,7 @@
     "build": "vite build",
     "test": "node --test tests/*.test.js",
     "preview": "vite preview --host 127.0.0.1",
-    "test:browser": "node tests/browser.mjs && node tests/media.mjs && node tests/youtube.mjs && node tests/tab-capture.mjs",
+    "test:browser": "node tests/published.mjs && node tests/browser.mjs && node tests/media.mjs && node tests/youtube.mjs && node tests/tab-capture.mjs",
     "format": "prettier --write src tests vite.config.js package.json index.html"
   },
   "dependencies": {

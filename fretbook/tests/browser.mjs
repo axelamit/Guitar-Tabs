@@ -11,7 +11,16 @@ await page.goto(baseURL);
 await expect(
   page.getByRole("heading", { name: "Your tab library" }),
 ).toBeVisible();
-await expect(page.locator(".song-row")).toHaveCount(3);
+await expect(page.locator(".song-row")).toHaveCount(2);
+// Create a local fixture for notation/playback; the published library has PDFs.
+await page
+  .getByRole("button", { name: "Add a tab", exact: true })
+  .first()
+  .click();
+await page.getByLabel("Song title", { exact: true }).fill("Morning light");
+await page.getByRole("button", { name: "Paste tabs", exact: true }).click();
+await page.getByRole("button", { name: "Use an original example" }).click();
+await page.getByRole("button", { name: "Save tab", exact: true }).click();
 await page.screenshot({
   path: artifact("fretbook-library.png"),
   fullPage: true,
@@ -19,6 +28,13 @@ await page.screenshot({
 await page
   .getByRole("button", { name: "Open Morning light", exact: true })
   .click();
+await page.getByRole("button", { name: "Interactive", exact: true }).click();
+await page
+  .getByRole("button", { name: "Create interactive draft", exact: true })
+  .click();
+await page.getByRole("button", { name: "Preview draft", exact: true }).click();
+await page.getByRole("checkbox").check();
+await page.getByRole("button", { name: "Save draft", exact: true }).click();
 await expect(page.getByRole("button", { name: "Play score" })).toBeEnabled({
   timeout: 45000,
 });

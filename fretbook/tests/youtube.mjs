@@ -69,7 +69,7 @@ try {
     }),
   );
   await page.goto(baseURL);
-  await expect(page.locator(".song-row")).toHaveCount(3);
+  await expect(page.locator(".song-row")).toHaveCount(2);
   await page
     .getByRole("button", { name: "Add a tab", exact: true })
     .first()
@@ -162,7 +162,7 @@ try {
     "Captured YouTube arrangement",
   );
   await page.getByRole("button", { name: "Save tab", exact: true }).click();
-  await expect(page.locator(".song-row")).toHaveCount(4);
+  await expect(page.locator(".song-row")).toHaveCount(3);
   await page
     .getByRole("button", {
       name: "Open Captured YouTube arrangement",
@@ -243,7 +243,7 @@ try {
     .toBe(true);
   await page.getByRole("button", { name: "Back to library" }).click();
   await page.reload();
-  await expect(page.locator(".song-row")).toHaveCount(4);
+  await expect(page.locator(".song-row")).toHaveCount(3);
   await page
     .getByRole("button", { name: "YouTube to pages", exact: false })
     .click();

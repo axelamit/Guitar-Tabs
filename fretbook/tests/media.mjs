@@ -5,7 +5,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.stack));
 await page.goto(baseURL);
-await expect(page.locator(".song-row")).toHaveCount(3);
+await expect(page.locator(".song-row")).toHaveCount(2);
 const picture = await page.evaluate(() => {
   const c = document.createElement("canvas");
   c.width = 600;
@@ -68,7 +68,7 @@ await page.getByRole("button", { name: "Export library", exact: true }).click();
 const backup = await downloading;
 const backupPath = await backup.path();
 await page.locator(".sidebar input[type=file]").setInputFiles(backupPath);
-await expect(page.getByRole("status")).toContainText("Restored 4 tabs");
+await expect(page.getByRole("status")).toContainText("Restored 3 tabs");
 await page.getByRole("button", { name: "Open Image and score test" }).click();
 await page.getByRole("button", { name: "Original", exact: true }).click();
 await expect(page.locator(".original-image")).toHaveJSProperty(
@@ -149,7 +149,7 @@ await page
   .click();
 await expect(page.locator(".add-modal .attachment-item")).toHaveCount(2);
 await page.getByRole("button", { name: "Save tab", exact: true }).click();
-await expect(page.locator(".song-row")).toHaveCount(5);
+await expect(page.locator(".song-row")).toHaveCount(4);
 console.log(
   "Media checks passed: image crops preserve originals, MusicXML renders, file backups restore, video scan removes duplicate frames. Runtime errors:",
   JSON.stringify(errors),

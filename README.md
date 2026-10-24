@@ -27,7 +27,7 @@ From the repository root, `npm run dev`, `npm run build`, and `npm test` forward
 - IndexedDB persistence and JSON backup/restore, including the original files. Restoring merges songs by ID; a restored song replaces an existing song with that ID.
 - Responsive layout and keyboard-accessible import/conversion/crop dialogs.
 
-Three original Fretbook practice studies are included on first use. They can be edited or removed.
+The published library includes PDF screenshot collections for “Single Handed Sailor” (Jose Churruca) and “Wicked Game” (Kenneth Acoustic), with their source videos. Each browser downloads these once, preserving existing songs and edits. Removing one locally keeps it removed on that browser. The three earlier demo studies are removed from existing libraries.
 
 ## Important boundaries
 
@@ -60,7 +60,7 @@ The workflow in `.github/workflows/pages.yml` installs dependencies, runs the pa
 
 For `axelamit/Guitar-Tabs`, the expected address is `https://axelamit.github.io/Guitar-Tabs/` once deployment succeeds. This is an independent website and does not require ChatGPT sign-in.
 
-GitHub Free normally requires the source repository to be public for Pages. The standard Pages website is public, even when a paid plan allows its source repository to remain private. This does not publish your personal library: imported tabs and practice notes stay in the visitor's browser. Export your library from the old host and restore that backup on the new host to transfer it.
+GitHub Free normally requires the source repository to be public for Pages. The standard Pages website is public, even when a paid plan allows its source repository to remain private. The two bundled PDF arrangements are public site assets. Other imported tabs and practice notes stay in the visitor's browser. Export your library from the old host and restore that backup on the new host to transfer it.
 
 The build takes `VITE_BASE_PATH` so project subpaths work, including music fonts and soundfonts. The workflow reads the actual base path from GitHub Pages configuration; other static hosts can use the default `/`.
 

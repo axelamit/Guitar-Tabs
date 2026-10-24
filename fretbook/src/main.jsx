@@ -55,7 +55,7 @@ import {
   youtubeId,
 } from "./tabs.js";
 import {
-  readLibrary,
+  initializeLibrary,
   writeLibrary,
   backupLibrary,
   restoreLibrary,
@@ -83,70 +83,6 @@ import { Cropper, VideoExtractor } from "./studio.jsx";
 import { YouTubeExtractor } from "./youtube.jsx";
 import "./style.css";
 const uid = () => crypto.randomUUID();
-const seeds = () =>
-  [
-    {
-      title: "Morning light",
-      artist: "Fretbook studies",
-      tuning: "Standard",
-      capo: 0,
-      bpm: 80,
-      status: "Learning",
-      tags: "Fingerpicking, Warm-up",
-      notes:
-        "An original four-bar study. Keep the thumb steady and let the melody ring.",
-      tone: "sage",
-      text: EXAMPLE,
-    },
-    {
-      title: "A little room to breathe",
-      artist: "Fretbook studies",
-      tuning: "Drop D",
-      capo: 2,
-      bpm: 72,
-      status: "Want to learn",
-      tags: "Fingerstyle, Slow",
-      notes: "Try a relaxed, even pulse. This is an original practice sketch.",
-      tone: "clay",
-      text: EXAMPLE.replace("E|", "D|"),
-    },
-    {
-      title: "Evening patterns",
-      artist: "Fretbook studies",
-      tuning: "DADGAD",
-      capo: 0,
-      bpm: 90,
-      status: "Comfortable",
-      tags: "Fingerstyle, Patterns",
-      notes: "An original pattern study to explore an alternate tuning.",
-      tone: "sand",
-      text: EXAMPLE.replace("e|", "D|").replace("B|", "A|").replace("E|", "D|"),
-    },
-  ].map((s, i) => ({
-    ...s,
-    id: `study-${i}`,
-    arranger: "",
-    favorite: i === 0,
-    createdAt: Date.now() - i * 86400000,
-    lastOpened: 0,
-    url: "",
-    attachments: [
-      {
-        id: `study-file-${i}`,
-        name: "Original study.txt",
-        kind: "text",
-        text: s.text,
-      },
-    ],
-    conversion: {
-      tex: toAlphaTex(parseAscii(s.text), s),
-      approximate: true,
-      technique: false,
-      sourceText: s.text,
-      duration: 8,
-    },
-    demo: true,
-  }));
 const iconFor = (kind) =>
   kind === "image" ? ImageIcon : kind === "score" ? FileMusic : FileText;
 const kinds = (s) => [...new Set(s.attachments.map((a) => a.kind))];
@@ -184,16 +120,17 @@ function App() {
   const fileRef = useRef(),
     saveQueue = useRef(Promise.resolve());
   useEffect(() => {
-    readLibrary()
-      .then((saved) => {
-        setSongs(saved ?? seeds());
+    initializeLibrary(() => [])
+      .then(({ songs, error }) => {
+        setSongs(songs);
+        if (error) setStorageError(error);
         setLoaded(true);
       })
       .catch(() => {
         setStorageError(
           "Device storage is unavailable. Changes are temporary; export a backup before closing.",
         );
-        setSongs(seeds());
+        setSongs([]);
         setLoaded(true);
       });
   }, []);

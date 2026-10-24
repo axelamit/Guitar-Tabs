@@ -1,7 +1,39 @@
-import { get, set } from "idb-keyval";
+import { get, set, getMany, setMany } from "idb-keyval";
+import { publishedTabs, loadPublishedTab } from "./published-library.js";
 const KEY = "fretbook-library-v1";
+const PUBLISHED_KEY = "fretbook-published-tabs-v1";
 export async function readLibrary() {
   return (await get(KEY)) ?? null;
+}
+export async function initializeLibrary(fallback) {
+  const [saved, imported = []] = await getMany([KEY, PUBLISHED_KEY]);
+  const songs = (saved ?? fallback()).filter(
+    (song) =>
+      !song.demo || !["study-0", "study-1", "study-2"].includes(song.id),
+  );
+  const pending = publishedTabs.filter((tab) => !imported.includes(tab.id));
+  if (!pending.length) return { songs };
+  try {
+    const additions = await Promise.all(
+      pending
+        .filter((tab) => !songs.some((song) => song.id === tab.id))
+        .map(loadPublishedTab),
+    );
+    const merged = [...additions, ...songs];
+    // Commit songs and import history together so interrupted imports can retry.
+    // History also lets a user remove a published song without it reappearing.
+    await setMany([
+      [KEY, merged],
+      [PUBLISHED_KEY, [...imported, ...pending.map((tab) => tab.id)]],
+    ]);
+    return { songs: merged };
+  } catch {
+    return {
+      songs,
+      error:
+        "Published tabs could not be saved on this device. Refresh to retry; your existing tabs are still available.",
+    };
+  }
 }
 export async function writeLibrary(songs) {
   await set(KEY, songs);
